@@ -86,12 +86,37 @@ export async function streamText(
   const modelDetails = MODEL_LIST.find((m) => m.name === currentModel);
 
   const dynamicMaxTokens = modelDetails && modelDetails.maxTokenAllowed ? modelDetails.maxTokenAllowed : MAX_TOKENS;
-
-  return _streamText({
-    model: getModel(currentProvider, currentModel, env, apiKeys) as any,
-    system: getSystemPrompt(),
-    maxTokens: dynamicMaxTokens,
-    messages: convertToCoreMessages(processedMessages as any),
-    ...options,
-  });
+  
+  const isClaudeModel = currentModel === 'claude-3-5-sonnet-latest';
+  const isAnthropicProvider = currentProvider === 'Anthropic';
+  
+  // Construct headers based on conditions
+  const headers = {
+      ...(isClaudeModel ? { 'anthropic-beta': 'max-tokens-3-5-sonnet-2024-07-15' } : {}),
+      ...(isAnthropicProvider ? { 'anthropic-beta': 'prompt-caching-2024-07-31' } : {}),
+  };
+  
+  // Construct messages dynamically based on the provider
+  const messagesObject = isAnthropicProvider
+      ? [
+        {
+          role: "system",
+          content: getSystemPrompt(),
+          metadata: { cache_control: { type: "ephemeral" } },
+      },
+          ...convertToCoreMessages(processedMessages as any),
+        ]
+      : convertToCoreMessages(processedMessages as any);
+  
+  // Construct the request payload
+  const requestPayload = {
+      model: getModel(currentProvider, currentModel, env, apiKeys) as any,
+      maxTokens: dynamicMaxTokens,
+      messages: messagesObject,
+      ...(isAnthropicProvider ? {} : { system: getSystemPrompt() }), // Exclude system for Anthropic
+      ...(Object.keys(headers).length > 0 ? { headers } : {}), // Include headers only if not empty
+      ...options,
+  };
+  
+  return _streamText(requestPayload);
 }
