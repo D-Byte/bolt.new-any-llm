@@ -28,6 +28,7 @@ import { SpeechRecognitionButton } from '~/components/chat/SpeechRecognition';
 import type { IProviderSetting, ProviderInfo } from '~/types/model';
 import { ScreenshotStateManager } from './ScreenshotStateManager';
 import { toast } from 'react-toastify';
+import { ScrollDownButton } from './ScrollDownButton.client';
 
 const TEXTAREA_MIN_HEIGHT = 76;
 
@@ -35,6 +36,7 @@ interface BaseChatProps {
   textareaRef?: React.RefObject<HTMLTextAreaElement> | undefined;
   messageRef?: RefCallback<HTMLDivElement> | undefined;
   scrollRef?: RefCallback<HTMLDivElement> | undefined;
+  scrollToBottom?: RefCallback<HTMLDivElement> | undefined;
   showChat?: boolean;
   chatStarted?: boolean;
   isStreaming?: boolean;
@@ -66,6 +68,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       textareaRef,
       messageRef,
       scrollRef,
+      scrollToBottom,
       showChat = true,
       chatStarted = false,
       isStreaming = false,
@@ -304,13 +307,17 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   return chatStarted ? (
                     <Messages
                       ref={messageRef}
-                      className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-1"
+                      className="flex flex-col w-full flex-1 max-w-chat pb-6 mx-auto z-1 overflow-auto flex-grow"
                       messages={messages}
                       isStreaming={isStreaming}
                     />
                   ) : null;
                 }}
               </ClientOnly>
+              {chatStarted && (
+              <div className="relative w-full bottom-[76px] right-4 max-w-chat z-20">
+        <ScrollDownButton onClick={scrollToBottom} show={true} />
+      </div>)}
               <div
                 className={classNames(
                   'bg-bolt-elements-background-depth-2 p-3 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt mb-6',

@@ -285,7 +285,7 @@ export const ChatImpl = memo(
       [],
     );
 
-    const [messageRef, scrollRef] = useSnapScroll();
+    const [messageRef, scrollRef, scrollToBottom] = useSnapScroll();
 
     useEffect(() => {
       const storedApiKeys = Cookies.get('apiKeys');
@@ -323,6 +323,7 @@ export const ChatImpl = memo(
         providerList={activeProviders}
         messageRef={messageRef}
         scrollRef={scrollRef}
+        scrollToBottom={scrollToBottom}
         handleInputChange={(e) => {
           onTextareaChange(e);
           debouncedCachePrompt(e);
