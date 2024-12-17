@@ -280,11 +280,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     };
 
     const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const charterToFind = '[c]';
       const { value } = event.target;
-      const lastThreeChars = value.slice(-3);
-      console.log('lastThreeChars',lastThreeChars);
-      if (lastThreeChars === '```' && !isCodeBlock) {
-        console.log('yes ```');
+      const lastTypedChars = value.slice(-3);
+      console.log('lastTypedChars',lastTypedChars);
+      if (lastTypedChars === charterToFind && !isCodeBlock) {
+        console.log('yes',charterToFind);
         setIsCodeBlock(true);
         setBacktickCount(3);
         // setInput(value.slice(0, -3));
@@ -299,6 +300,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
       if (isCodeBlock) {
         setCodeBlockContent(value);
+        TODO
       } else {
         if (handleInputChange) {
           const syntheticEvent = {
@@ -509,7 +511,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       minHeight: TEXTAREA_MIN_HEIGHT,
                       maxHeight: TEXTAREA_MAX_HEIGHT,
                     }}
-                    placeholder="How can Bolt help you today?"
+                    placeholder={isCodeBlock ? "Type or paste code here, and than [Enter]" : "How can Bolt help you today?"}
                     translate="no"
                   />
                   <ClientOnly>
