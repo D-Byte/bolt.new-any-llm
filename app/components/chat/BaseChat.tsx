@@ -117,6 +117,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const charterToFind = '[c]';
     const [codeBlockContent, setCodeBlockContent] = useState('');
     const [backtickCount, setBacktickCount] = useState(0);
+    const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
       console.log(transcript);
@@ -313,9 +314,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === 'Enter' && isCodeBlock) {
-        console.log('make code block',event);
         event.preventDefault();
         if (handleInputChange) {
+          // Keep the backticks for the API
           const syntheticEvent = {
             target: { value: `${input}\n\`\`\`\n${codeBlockContent}\n\`\`\`\n` },
           } as React.ChangeEvent<HTMLTextAreaElement>;
@@ -466,6 +467,24 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     'relative shadow-xs border border-bolt-elements-borderColor backdrop-blur rounded-lg',
                   )}
                 >
+                <div className="relative">
+                  {isCodeBlock && (
+                    <div 
+                      className={classNames(
+                        'absolute inset-0 w-full pl-4 pt-4 pr-16 font-mono bg-bolt-elements-background-depth-3 rounded-md',
+                        'text-bolt-elements-textPrimary text-sm pointer-events-none overflow-auto'
+                      )}
+                      style={{
+                        fontFamily: "'Fira Code', 'Consolas', monospace",
+                        minHeight: TEXTAREA_MIN_HEIGHT,
+                        maxHeight: TEXTAREA_MAX_HEIGHT,
+                        padding: '1rem',
+                        whiteSpace: 'pre-wrap'
+                      }}
+                    >
+                      {codeBlockContent}
+                    </div>
+                  )}
                   <textarea
                     ref={textareaRef}
                     className={classNames(
@@ -473,7 +492,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       'transition-all duration-200',
                       'hover:border-bolt-elements-focus',
                       {
-                        'font-mono bg-bolt-elements-background-depth-3 rounded-md': isCodeBlock,
+                        'opacity-0': isCodeBlock,
                         'bg-transparent': !isCodeBlock
                       }
                     )}
@@ -514,12 +533,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     style={{
                       minHeight: TEXTAREA_MIN_HEIGHT,
                       maxHeight: TEXTAREA_MAX_HEIGHT,
-                      fontFamily: isCodeBlock ? CODE_FONT : 'inherit',
                       padding: isCodeBlock ? '1rem' : undefined,
                     }}
                     placeholder={isCodeBlock ? "Type or paste code here, and than [Enter]" : `How can Bolt help you today? Type ${charterToFind} for codeblock`}
                     translate="no"
                   />
+                  </div>
                   <ClientOnly>
                     {() => (
                       <SendButton
