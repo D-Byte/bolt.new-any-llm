@@ -112,6 +112,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const [isListening, setIsListening] = useState(false);
     const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
     const [transcript, setTranscript] = useState('');
+    const [isCodeBlock, setIsCodeBlock] = useState(false);
+    const [codeBlockContent, setCodeBlockContent] = useState('');
+    const [backtickCount, setBacktickCount] = useState(0);
 
     useEffect(() => {
       console.log(transcript);
@@ -276,6 +279,73 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       }
     };
 
+    const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const { value } = event.target;
+      const lastThreeChars = value.slice(-3);
+      console.log('lastThreeChars',lastThreeChars);
+      if (lastThreeChars === '```' && !isCodeBlock) {
+        console.log('yes ```');
+        setIsCodeBlock(true);
+        setBacktickCount(3);
+        // setInput(value.slice(0, -3));
+        if (handleInputChange) {
+          const syntheticEvent = {
+            target: { value: value.slice(0, -3) },
+          } as React.ChangeEvent<HTMLTextAreaElement>;
+          handleInputChange(syntheticEvent);
+        }
+        return;
+      }
+
+      if (isCodeBlock) {
+        setCodeBlockContent(value);
+      } else {
+        if (handleInputChange) {
+          const syntheticEvent = {
+            target: { value: value },
+          } as React.ChangeEvent<HTMLTextAreaElement>;
+          handleInputChange(syntheticEvent);
+        }
+      }
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter' && isCodeBlock) {
+        console.log('make code block',event);
+        event.preventDefault();
+        if (handleInputChange) {
+          const syntheticEvent = {
+            target: { value: `${input}\n\`\`\`\n${codeBlockContent}\n\`\`\`\n` },
+          } as React.ChangeEvent<HTMLTextAreaElement>;
+          handleInputChange(syntheticEvent);
+        }
+        setIsCodeBlock(false);
+        setCodeBlockContent('');
+        setBacktickCount(0);
+        return;
+      }
+
+      if (event.key === 'Enter') {
+        if (event.shiftKey) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (isStreaming) {
+          handleStop?.();
+          return;
+        }
+
+        // ignore if using input method engine
+        if (event.nativeEvent.isComposing) {
+          return;
+        }
+
+        handleSendMessage?.(event);
+      }
+    };
+
     const baseChat = (
       <div
         ref={ref}
@@ -431,31 +501,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         }
                       });
                     }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        if (event.shiftKey) {
-                          return;
-                        }
-
-                        event.preventDefault();
-
-                        if (isStreaming) {
-                          handleStop?.();
-                          return;
-                        }
-
-                        // ignore if using input method engine
-                        if (event.nativeEvent.isComposing) {
-                          return;
-                        }
-
-                        handleSendMessage?.(event);
-                      }
-                    }}
-                    value={input}
-                    onChange={(event) => {
-                      handleInputChange?.(event);
-                    }}
+                    onKeyDown={handleKeyDown}
+                    value={isCodeBlock ? codeBlockContent : input}
+                    onChange={handleTextareaChange}
                     onPaste={handlePaste}
                     style={{
                       minHeight: TEXTAREA_MIN_HEIGHT,
