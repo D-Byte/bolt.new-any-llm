@@ -30,6 +30,7 @@ import { ScreenshotStateManager } from './ScreenshotStateManager';
 import { toast } from 'react-toastify';
 
 const TEXTAREA_MIN_HEIGHT = 76;
+const CODE_FONT = "'Fira Code', 'Consolas', monospace";
 
 interface BaseChatProps {
   textareaRef?: React.RefObject<HTMLTextAreaElement> | undefined;
@@ -113,6 +114,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
     const [transcript, setTranscript] = useState('');
     const [isCodeBlock, setIsCodeBlock] = useState(false);
+    const charterToFind = '[c]';
     const [codeBlockContent, setCodeBlockContent] = useState('');
     const [backtickCount, setBacktickCount] = useState(0);
 
@@ -280,7 +282,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     };
 
     const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const charterToFind = '[c]';
       const { value } = event.target;
       const lastTypedChars = value.slice(-3);
       console.log('lastTypedChars',lastTypedChars);
@@ -300,7 +301,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
       if (isCodeBlock) {
         setCodeBlockContent(value);
-        TODO
       } else {
         if (handleInputChange) {
           const syntheticEvent = {
@@ -469,9 +469,13 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   <textarea
                     ref={textareaRef}
                     className={classNames(
-                      'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
+                      'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary text-sm',
                       'transition-all duration-200',
                       'hover:border-bolt-elements-focus',
+                      {
+                        'font-mono bg-bolt-elements-background-depth-3 rounded-md': isCodeBlock,
+                        'bg-transparent': !isCodeBlock
+                      }
                     )}
                     onDragEnter={(e) => {
                       e.preventDefault();
@@ -510,8 +514,10 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     style={{
                       minHeight: TEXTAREA_MIN_HEIGHT,
                       maxHeight: TEXTAREA_MAX_HEIGHT,
+                      fontFamily: isCodeBlock ? CODE_FONT : 'inherit',
+                      padding: isCodeBlock ? '1rem' : undefined,
                     }}
-                    placeholder={isCodeBlock ? "Type or paste code here, and than [Enter]" : "How can Bolt help you today?"}
+                    placeholder={isCodeBlock ? "Type or paste code here, and than [Enter]" : `How can Bolt help you today? Type ${charterToFind} for codeblock`}
                     translate="no"
                   />
                   <ClientOnly>
